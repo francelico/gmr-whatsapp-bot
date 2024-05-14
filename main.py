@@ -1,8 +1,11 @@
 import tyro
+import platform
 from dataclasses import dataclass
 import math
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
 import time
 import pywhatkit
 
@@ -16,6 +19,23 @@ class Args:
     remind_hours: int = 6
     """The number of hours left on a turn to start reminding the player."""
 
+def make_driver():
+    # different for ubuntu 22.04
+    if platform.freedesktop_os_release().get("VERSION_CODENAME") == "jammy":
+        # Specify the path to geckodriver
+        geckodriver_path = '/snap/bin/geckodriver'
+        firefox_path = '/snap/bin/firefox'
+
+        driver_service = Service(executable_path=geckodriver_path)
+
+        options = Options()
+        options.binary_location = firefox_path
+
+        driver = webdriver.Firefox(service=driver_service, options=options)
+    else:
+        driver = webdriver.Firefox()
+    return driver
+
 def send_whatsapp_message(message, group_id):
     """Sends a WhatsApp message to the user."""
 
@@ -23,8 +43,8 @@ def send_whatsapp_message(message, group_id):
                                    close_time=2)
 
 
-def get_current_player(browser):
-    current_player_elem = browser.find_element(By.CLASS_NAME, "game-host")
+def get_current_player(driver):
+    current_player_elem = driver.find_element(By.CLASS_NAME, "game-host")
     elementList = current_player_elem.find_elements(By.TAG_NAME, "img")
 
     current_player_steam_id = '!ERR'
@@ -36,8 +56,8 @@ def get_current_player(browser):
     return current_player_steam_id
 
 
-def get_time_left(browser):
-    turn_timer_elem = browser.find_element(By.ID, "turn-timer-container")
+def get_time_left(driver):
+    turn_timer_elem = driver.find_element(By.ID, "turn-timer-container")
     time_left_list = turn_timer_elem.find_elements(By.CLASS_NAME, "turn-timer-text")
     days_left = '!ERR'
     hours_left = '!ERR'
@@ -57,8 +77,8 @@ SLEEP_TIME = 1800 #in seconds
 if __name__ == "__main__":
     args = tyro.cli(Args)
 
-    browser = webdriver.Firefox()
-    browser.get(args.gmr_game_url)
+    driver = make_driver()
+    driver.get(args.gmr_game_url)
 
     # Hello world
     send_whatsapp_message(f"Hi! I'm your friendly neighborhood Civ turn reminder bot. I'll send a message when your turn starts, and then every hour once you have under {args.remind_hours} hours left on your turn. If you ignore me I'll make sure Gandhi nukes you first. Have fun!")
@@ -66,10 +86,10 @@ if __name__ == "__main__":
 
     hours_left_last_message = math.inf
     while True:
-        browser.refresh()
+        driver.refresh()
         time.sleep(1)
-        current_player = get_current_player(browser)
-        days_left, hours_left = get_time_left(browser)
+        current_player = get_current_player(driver)
+        days_left, hours_left = get_time_left(driver)
         if current_player != last_player:
             msg = f"It's {current_player}'s turn to play! You have {days_left} days and {hours_left} hours left."
             send_whatsapp_message(msg)
