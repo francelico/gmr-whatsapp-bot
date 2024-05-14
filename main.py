@@ -22,16 +22,14 @@ class Args:
 def make_driver():
     # different for ubuntu 22.04
     if platform.freedesktop_os_release().get("VERSION_CODENAME") == "jammy":
-        # Specify the path to geckodriver
-        geckodriver_path = '/snap/bin/geckodriver'
-        firefox_path = '/snap/bin/firefox'
+        options = Options()
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
 
+        geckodriver_path = "/snap/bin/geckodriver"  # specify the path to your geckodriver
         driver_service = Service(executable_path=geckodriver_path)
 
-        options = Options()
-        options.binary_location = firefox_path
-
-        driver = webdriver.Firefox(service=driver_service, options=options)
+        driver = webdriver.Firefox(options=options, service=driver_service)
     else:
         driver = webdriver.Firefox()
     return driver
@@ -81,7 +79,8 @@ if __name__ == "__main__":
     driver.get(args.gmr_game_url)
 
     # Hello world
-    send_whatsapp_message(f"Hi! I'm your friendly neighborhood Civ turn reminder bot. I'll send a message when your turn starts, and then every hour once you have under {args.remind_hours} hours left on your turn. If you ignore me I'll make sure Gandhi nukes you first. Have fun!")
+    msg = f"Hi! I'm your friendly neighborhood Civ turn reminder bot. I'll send a message when your turn starts, and then every hour once you have under {args.remind_hours} hours left on your turn. If you ignore me I'll make sure Gandhi nukes you first. Have fun!"
+    send_whatsapp_message(msg, args.whatsapp_group_id)
     last_player = None
 
     hours_left_last_message = math.inf
@@ -92,7 +91,7 @@ if __name__ == "__main__":
         days_left, hours_left = get_time_left(driver)
         if current_player != last_player:
             msg = f"It's {current_player}'s turn to play! You have {days_left} days and {hours_left} hours left."
-            send_whatsapp_message(msg)
+            send_whatsapp_message(msg, args.whatsapp_group_id)
             last_player = current_player
             hours_left_last_message = math.inf
         if days_left < 1 and hours_left < args.remind_hours and hours_left < hours_left_last_message:
