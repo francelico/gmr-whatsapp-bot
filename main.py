@@ -9,13 +9,12 @@ from selenium.webdriver.firefox.service import Service
 import time
 import pywhatkit
 
-# pywhatkit.sendwhatmsg('+41793305447', 'Auto message test', 11, 43, wait_time=30, tab_close=True, close_time=2)
-
 @dataclass
 class Args:
     whatsapp_group_id: str = None
     """The ID of the WhatsApp group to send messages to."""
-    gmr_game_url: str = "http://multiplayerrobot.com/Game#12345"
+    gmr_game_url: str = None
+    """The URL of the GMR game to monitor (e.g. http://multiplayerrobot.com/Game#12345)."""
     remind_hours: int = 6
     """The number of hours left on a turn to start reminding the player."""
 
@@ -70,10 +69,10 @@ def get_time_left(driver):
 STEAM_ICON_SIZE = 76.0
 SLEEP_TIME = 1800 #in seconds
 
-# Main logic
-
 if __name__ == "__main__":
     args = tyro.cli(Args)
+    assert args.whatsapp_group_id is not None, "Please provide a WhatsApp group ID."
+    assert args.gmr_game_url is not None, "Please provide a GMR game URL."
 
     driver = make_driver()
     driver.get(args.gmr_game_url)
