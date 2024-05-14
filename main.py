@@ -12,9 +12,9 @@ import pywhatkit
 class Args:
     whatsapp_group_id: str = None
     """The ID of the WhatsApp group to send messages to."""
+    gmr_game_url: str = "http://multiplayerrobot.com/Game#12345"
     remind_hours: int = 6
     """The number of hours left on a turn to start reminding the player."""
-    gmr_game_url: str = "http://multiplayerrobot.com/Game#12345"
 
 def send_whatsapp_message(message, group_id):
     """Sends a WhatsApp message to the user."""
