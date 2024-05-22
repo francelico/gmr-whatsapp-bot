@@ -46,8 +46,10 @@ def get_current_player(driver):
 
     current_player_steam_id = '!ERR'
     for element in elementList:
-        if element.size['height'] == STEAM_ICON_SIZE:
+        if element.size['height'] in [STEAM_ICON_SIZE, STEAM_ICON_SIZE_HOST]:
             current_player_steam_id = element.accessible_name
+            if element.size['height'] == STEAM_ICON_SIZE_HOST:
+                current_player_steam_id = current_player_steam_id.split(" ")[0]
             break
 
     return current_player_steam_id
@@ -67,6 +69,7 @@ def get_time_left(driver):
 
 # Constants
 STEAM_ICON_SIZE = 76.0
+STEAM_ICON_SIZE_HOST = 80.0
 SLEEP_TIME = 1800 #in seconds
 
 if __name__ == "__main__":
